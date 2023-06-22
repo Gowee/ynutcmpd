@@ -6,7 +6,7 @@ authors = ["Hung-I Wang <whygowe@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 requests = "^2.31.0"
 beautifulsoup4 = "^4.12.2"
 lxml = "^4.9.2"
