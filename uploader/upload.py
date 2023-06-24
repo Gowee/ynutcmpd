@@ -188,8 +188,8 @@ def main():
         prev_filename = None
         for (
             nth,
-            pagename,
             filename,
+            pagename,
             volume_name,
             volume_path,
             image_urls,
