@@ -177,6 +177,7 @@ def main():
                 # volume_name_wps = (
                 #    (" " + volume_name) if volume_name else ""
                 # )  # with preceding space
+                volume_name = volume_name.replace("(", "（").replace("）", ")")
                 filename = f"YNUTCM-{volume_name}.pdf"
                 pagename = "File:" + filename
                 assert all(char not in set(r'["$*|\]</^>@#') for char in pagename)

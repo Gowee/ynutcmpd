@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "uploader"
+version = "0.1.0"
+description = ""
+authors = ["Hung-I Wang <whygowe@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.28.1"
+mwclient = "^0.10.1"
+more-itertools = "^9.0.0"
+pyyaml = "^6.0"
+zhconv-rs = "^0.1.0"
+img2pdf = "^0.4.4"
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
