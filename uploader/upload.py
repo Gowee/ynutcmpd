@@ -178,11 +178,14 @@ def main():
                 #    (" " + volume_name) if volume_name else ""
                 # )  # with preceding space
                 volume_name = volume_name.replace("(", "（").replace(")", "）")
+                volume_name_simplified = re.sub(
+                    r"[0-9-]+(.+?)[0-9-]+", r"\1", volume_name
+                )
                 filename = f"YNUTCM-{volume_name}.pdf"
                 pagename = "File:" + filename
                 assert all(char not in set(r'["$*|\]</^>@#') for char in pagename)
                 comment = f'Upload {title} {volume_name} ({1+ivol}/{len(book["fulltextpath"])}) by {book["detail"]["author"]} (batch task; ynutcm; {batch_link}; [[{category_name}|{title}]])'
-                yield ivol + 1, filename, pagename, volume_name, volume_path, image_urls, comment
+                yield ivol + 1, filename, pagename, byline, volume_name, volume_path, volume_name_simplified, image_urls, comment
 
         volsit = peekable(genvols())
         prev_filename = None
@@ -190,8 +193,10 @@ def main():
             nth,
             filename,
             pagename,
+            byline,
             volume_name,
             volume_path,
+            volume_name_simplified,
             image_urls,
             comment,
         ) in volsit:
@@ -224,6 +229,8 @@ def main():
 {{{{{template}
   |volname={volume_name}
   |volpath={volume_path}
+  |simpvolname={volume_name_simplified}
+  |byline={byline}
 {additional_fields}
 }}}}
 
@@ -272,7 +279,7 @@ def main():
                 if not getopt("skip_on_failures", False):
                     raise e
             prev_filename = filename
-        input("Press any key to continue")
+        #input("Press any key to continue")
         store_position("ynutcm", str(path))
     # logger.info(f"Batch done with {failcnt} failures.")
 
