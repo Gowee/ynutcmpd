@@ -172,7 +172,6 @@ def main():
             for ivol, (volume_name, volume_path, image_urls) in enumerate(
                 map(lambda triple: triple.values(), book["fulltextpath"])
             ):
-                volume_name = zhconv(volume_name, "zh-hant")
                 # pagename = "File:" + book['name'] + ".pdf"
                 # volume_name = f"第{ivol+1}冊" if len(volurls) > 1 else ""
                 # volume_name_wps = (
@@ -182,7 +181,7 @@ def main():
                 volume_name_simplified = re.sub(
                     r"[0-9-]+(.+?)[0-9-]+", r"\1", volume_name
                 )
-                filename = f"YNUTCM-{volume_name}.pdf"
+                filename = zhconv(f"YNUTCM-{volume_name}.pdf", "zh-hant")
                 pagename = "File:" + filename
                 assert all(char not in set(r'["$*|\]</^>@#') for char in pagename)
                 comment = f'Upload {title} {volume_name} ({1+ivol}/{len(book["fulltextpath"])}) by {book["detail"]["author"]} (batch task; ynutcm; {batch_link}; [[{category_name}|{title}]])'
@@ -206,8 +205,11 @@ def main():
             except StopIteration:
                 next_filename = None
             additional_fields = "\n".join(
-                f"  |JSONFIELD-{k}={zhconv(v, 'zh-hant') if k not in ('cover', 'fullTextPath') else v}"
-                for k, v in book["detail"].items()
+                [
+                    f"  |JSONFIELD-{k}={zhconv(v, 'zh-hant') if k not in ('cover', 'fullTextPath') else v}"
+                    for k, v in book["detail"].items()
+                ]
+                + [f"  |JSONFIELD-{k}-original={v}" for k, v in book["detail"].items()]
             )
             category_page = site.pages[category_name]
             # TODO: for now we do not create a seperated category suffixed with the edition
@@ -229,9 +231,11 @@ def main():
 {{{{{booknavi}|prev={prev_filename or ""}|next={next_filename or ""}|nth={nth}|total={len(book["fulltextpath"])}|number={book["detail"]["number"]}|totalnum={book["detail"]["totalnum"]}|callnum={book["detail"]["callnum"]}|docNo={book["detail"]["docNo"]}|class={zhconv(book["detail"]["class"], "zh-Hant")}}}}}
 {{{{{template}
   |bookurlid={urlid}
-  |volname={volume_name}
-  |volpath={volume_path}
-  |simpvolname={volume_name_simplified}
+  |volname={zhconv(volume_name, 'zh-hant')}
+  |volname-original={volume_name}
+  |volpath={zhconv(volume_path, 'zh-hant')}
+  |volpath-original={volume_path}
+  |simpvolname={zhconv(volume_name_simplified, 'zh-hant')}
   |byline={byline}
 {additional_fields}
 }}}}
@@ -239,6 +243,9 @@ def main():
 [[{category_name}]]
     """
             # print(volume_wikitext)
+            if not image_urls:
+                logger.warning(f"No images for {pagename}!")
+                continue
             page = site.pages[pagename]
             try:
                 if not page.exists:
