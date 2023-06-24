@@ -59,11 +59,11 @@ def main():
     lines.append("[[" + category_name + "]]")
     lines.append("")
 
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print("\n".join(lines))
     else:
-        print(f"Writing file list for batch {batch_name}")
-        pagename = sys.argv[2]
+        print(f"Writing file list")
+        pagename = sys.argv[1]
 
         username, password = config["username"], config["password"]
         site = mwclient.Site("commons.wikimedia.org")
@@ -72,7 +72,7 @@ def main():
         site.chunk_size = 1024 * 1024 * 64
 
         site.pages[pagename].edit(
-            "\n".join(lines), f"Writing file list for batch {batch_name} to {pagename}"
+            "\n".join(lines), f"Writing file list to {pagename}"
         )
 
 

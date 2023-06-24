@@ -22,8 +22,8 @@ URL_VOLUME_VIEW = "http://guji.ynutcm.edu.cn/Yngj/Data/PicView"
 CHANNEL_ID = 3123
 PAGE_SIZE = 12
 
-
-logging.basicConfig(level=logging.INFO)
+LOGLEVEL = os.environ.get("LOGLEVEL", "INFO").upper()
+logging.basicConfig(level=LOGLEVEL)
 logger = logging.getLogger(__name__)
 
 
