@@ -156,6 +156,7 @@ def main():
     for path in book_paths:
         with open(path) as f:
             book = json.load(f)
+        urlid = int(path.stem)
         title = zhconv(book["detail"]["title"], "zh-hant")
         category_name = "Category:" + title
         byline = zhconv(book["detail"]["author"], "zh-hant")
@@ -227,6 +228,7 @@ def main():
             volume_wikitext = f"""=={{{{int:filedesc}}}}==
 {{{{{booknavi}|prev={prev_filename or ""}|next={next_filename or ""}|nth={nth}|total={len(book["fulltextpath"])}|number={book["detail"]["number"]}|totalnum={book["detail"]["totalnum"]}|callnum={book["detail"]["callnum"]}|docNo={book["detail"]["docNo"]}|class={zhconv(book["detail"]["class"], "zh-Hant")}}}}}
 {{{{{template}
+  |bookurlid={urlid}
   |volname={volume_name}
   |volpath={volume_path}
   |simpvolname={volume_name_simplified}
@@ -236,7 +238,7 @@ def main():
 
 [[{category_name}]]
     """
-            print(volume_wikitext)
+            # print(volume_wikitext)
             page = site.pages[pagename]
             try:
                 if not page.exists:
@@ -279,7 +281,7 @@ def main():
                 if not getopt("skip_on_failures", False):
                     raise e
             prev_filename = filename
-        #input("Press any key to continue")
+        # input("Press any key to continue")
         store_position("ynutcm", str(path))
     # logger.info(f"Batch done with {failcnt} failures.")
 
