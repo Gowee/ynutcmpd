@@ -112,7 +112,7 @@ def fetch_volume(filename, image_urls):
         logger.debug(f"Downloading {url}")
         images.append(fetch_file(url, session))
     blob = img2pdf.convert(images)
-    with cached_path(cached_path, "wb") as f:
+    with cached_path.open("wb") as f:
         f.write(blob)
     return blob
 
