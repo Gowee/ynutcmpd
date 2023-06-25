@@ -177,9 +177,9 @@ def main():
                 # volume_name_wps = (
                 #    (" " + volume_name) if volume_name else ""
                 # )  # with preceding space
-                volume_name = volume_name.replace("(", "（").replace(")", "）")
+                volume_name = volume_name.strip().replace("(", "（").replace(")", "）")
                 volume_name_simplified = re.sub(
-                    r"[0-9-]+(.+?)[0-9-]+", r"\1", volume_name
+                    r"[0-9-]+(.+?)[0-9-]+$", r"\1", volume_name
                 )
                 filename = zhconv(f"YNUTCM-{volume_name}.pdf", "zh-hant")
                 pagename = "File:" + filename
