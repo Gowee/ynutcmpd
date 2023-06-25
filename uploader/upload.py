@@ -109,6 +109,8 @@ def fetch_volume(filename, image_urls):
     session = requests.Session()  # <del>activate connection reuse</del>
     images = []
     for url in image_urls:
+        if url.ends_with(".db"):
+            continue
         logger.debug(f"Downloading {url}")
         images.append(fetch_file(url, session))
     blob = img2pdf.convert(images)
