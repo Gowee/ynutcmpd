@@ -206,10 +206,13 @@ def main():
                 next_filename = None
             additional_fields = "\n".join(
                 [
-                    f"  |JSONFIELD-{k}={zhconv(v, 'zh-hant') if k not in ('cover', 'fullTextPath') else v}"
+                    f"  |JSONFIELD-{k}={zhconv(v or '', 'zh-hant')}"
                     for k, v in book["detail"].items()
                 ]
-                + [f"  |JSONFIELD-{k}-original={v}" for k, v in book["detail"].items()]
+                + [
+                    f"  |JSONFIELD-{k}-original={v or ''}"
+                    for k, v in book["detail"].items()
+                ]
             )
             category_page = site.pages[category_name]
             # TODO: for now we do not create a seperated category suffixed with the edition
