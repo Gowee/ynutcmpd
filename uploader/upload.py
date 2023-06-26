@@ -161,7 +161,7 @@ def main():
         urlid = int(path.stem)
         title = zhconv(book["detail"]["title"], "zh-hant")
         category_name = "Category:" + title
-        byline = zhconv(book["detail"]["author"], "zh-hant")
+        byline = zhconv(book["detail"]["author"] or "", "zh-hant")
         if getopt("apply_tortoise_shell_brackets_to_starting_of_byline", False):
             # e.g. "(魏)王弼,(晋)韩康伯撰   (唐)邢璹撰"
             byline = re.sub(
