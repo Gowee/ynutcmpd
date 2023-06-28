@@ -6,6 +6,7 @@ import json
 import sys
 import functools
 from pathlib import Path
+from zhconv_rs import zhconv
 
 import mwclient
 
@@ -14,7 +15,6 @@ DATA_DIR = Path(__file__).parent / "../crawler/data"
 
 
 def main():
-
     with open(CONFIG_FILE_PATH, "r") as f:
         config = yaml.safe_load(f.read())
 
@@ -37,18 +37,27 @@ def main():
     ]
 
     for book in books:
-        title = book["detail"]["title"]
-        byline = book['detail']["author"]
-        lines.append(f'* 《{title}》 {byline}')
+        title = zhconv(book["detail"]["title"] or "", "zh-hant")
+        byline = zhconv(book["detail"]["author"] or "", "zh-hant")
+        lines.append(f"* 《{title}》 {byline}")
 
-        for ivol, (volume_name, volume_path, image_urls) in enumerate(map(lambda triple: triple.values(), book["fulltextpath"])):
+        for ivol, (volume_name, volume_path, image_urls) in enumerate(
+            map(lambda triple: triple.values(), book["fulltextpath"])
+        ):
             # pagename = "File:" + book['name'] + ".pdf"
-            #volume_name = f"第{ivol+1}冊" if len(volurls) > 1 else ""
-            #volume_name_wps = (
+            # volume_name = f"第{ivol+1}冊" if len(volurls) > 1 else ""
+            # volume_name_wps = (
             #    (" " + volume_name) if volume_name else ""
-            #)  # with preceding space
-            #filename = f'{book["name"]}{volume_name_wps}.pdf'
-            volume_name = volume_name.replace("(", "（").replace(")", "）")
+            # )  # with preceding space
+            # filename = f'{book["name"]}{volume_name_wps}.pdf'
+            volume_name = (
+                zhconv(
+                    volume_name.strip().replace("(", "（").replace(")", "）"), "zh-hant"
+                )
+                .replace("{", "（")
+                .replace("}", "）")
+            )
+
             filename = f"YNUTCM-{volume_name}.pdf"
             pagename = "File:" + filename
             assert all(char not in set(r'["$*|\]</^>@#') for char in pagename)
@@ -71,9 +80,7 @@ def main():
         site.requests["timeout"] = 125
         site.chunk_size = 1024 * 1024 * 64
 
-        site.pages[pagename].edit(
-            "\n".join(lines), f"Writing file list to {pagename}"
-        )
+        site.pages[pagename].edit("\n".join(lines), f"Writing file list to {pagename}")
 
 
 if __name__ == "__main__":
