@@ -214,11 +214,11 @@ def main():
                 next_filename = None
             additional_fields = "\n".join(
                 [
-                    f"  |JSONFIELD-{k}={zhconv(v or '', 'zh-hant')}"
+                    f"  |JSONFIELD-{k}={zhconv('' if v is None else v, 'zh-hant')}"
                     for k, v in book["detail"].items()
                 ]
                 + [
-                    f"  |JSONFIELD-{k}-original={v or ''}"
+                    f"  |JSONFIELD-{k}-original={'' if v is None else v}"
                     for k, v in book["detail"].items()
                 ]
             )
