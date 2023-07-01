@@ -179,12 +179,16 @@ def main():
                 # volume_name_wps = (
                 #    (" " + volume_name) if volume_name else ""
                 # )  # with preceding space
-                volume_name = (
-                    volume_name.strip()
-                    .replace("(", "（")
-                    .replace(")", "）")
-                    .replace("{", "（")
-                    .replace("}", "）")
+                volume_name = re.sub(
+                    r"\s+",
+                    " ",
+                    (
+                        volume_name.strip()
+                        .replace("(", "（")
+                        .replace(")", "）")
+                        .replace("{", "（")
+                        .replace("}", "）")
+                    ),
                 )
                 volume_name_simplified = re.sub(
                     r"[0-9-]+(.+?)[0-9-]+$", r"\1", volume_name
