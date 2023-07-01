@@ -75,7 +75,7 @@ def retry(times=RETRY_TIMES):
                     tried += 1
                     if tried >= times:
                         raise Exception(f"Failed finally after {times} tries") from e
-                    logger.info(f"Retrying {fn}")
+                    logger.warning(f"Retrying {fn}", exc_info=e)
 
         return wrapped
 
