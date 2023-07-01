@@ -50,12 +50,19 @@ def main():
             #    (" " + volume_name) if volume_name else ""
             # )  # with preceding space
             # filename = f'{book["name"]}{volume_name_wps}.pdf'
-            volume_name = (
-                zhconv(
-                    volume_name.strip().replace("(", "（").replace(")", "）"), "zh-hant"
-                )
-                .replace("{", "（")
-                .replace("}", "）")
+            volume_name = zhconv(
+                volume_name.strip().replace("(", "（").replace(")", "）"), "zh-hant"
+            )
+            volume_name = re.sub(
+                r"\s+",
+                " ",
+                (
+                    volume_name.strip()
+                    .replace("(", "（")
+                    .replace(")", "）")
+                    .replace("{", "（")
+                    .replace("}", "）")
+                ),
             )
 
             filename = f"YNUTCM-{volume_name}.pdf"
