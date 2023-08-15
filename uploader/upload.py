@@ -18,6 +18,7 @@ from more_itertools import peekable
 import requests
 import yaml
 import mwclient
+from pywikibot import Site, Page, FilePage
 from zhconv_rs import zhconv as zhconv_
 
 zhconv = lambda s, v: zhconv_(s, v) if type(s) == str else s
@@ -30,7 +31,9 @@ CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), "config.yml")
 POSITION_FILE_PATH = os.path.join(os.path.dirname(__file__), ".position")
 DATA_DIR = Path(__file__).parent / "../crawler/data"
 BLOB_DIR = Path(__file__).parent / "blobs"
+CACHE_FILE_PATH = Path(__file__).parent / ".cache.pdf"
 RETRY_TIMES = 3
+CHUNK_SIZE = 4 * 1024 * 1024
 # TEMP_DIR = Path()gettempdir())
 
 USER_AGENT = "ynutcmpd/0.0 (+https://github.com/gowee/ynutcmpd)"
@@ -101,12 +104,13 @@ def fetch_file(url, session=None):
 
 @retry(3)
 def fetch_volume(filename, image_urls):
-    cached_path = BLOB_DIR / filename
-    if cached_path.exists():
-        with cached_path.open("rb") as f:
-            blob = f.read()
-            assert blob
-            return blob
+    #return CACHE_FILE_PATH
+    # cached_path = BLOB_DIR / filename
+    # if cached_path.exists():
+    #     with cached_path.open("rb") as f:
+    #         blob = f.read()
+    #         assert blob
+    #         return blob
     session = requests.Session()  # <del>activate connection reuse</del>
     images = []
     for url in image_urls:
@@ -115,9 +119,12 @@ def fetch_volume(filename, image_urls):
         logger.debug(f"Downloading {url}")
         images.append(fetch_file(url, session))
     blob = img2pdf.convert(images)
-    with cached_path.open("wb") as f:
+    # with cached_path.open("wb") as f:
+    #     f.write(blob)
+    logger.info(f"PDF constructed for {filename} ({len(blob)} B)")
+    with CACHE_FILE_PATH.open("wb") as f:
         f.write(blob)
-    return blob
+    return CACHE_FILE_PATH
 
 
 def main():
@@ -125,12 +132,14 @@ def main():
         config = yaml.safe_load(f.read())
 
     username, password = config["username"], config["password"]
-    site = mwclient.Site("commons.wikimedia.org")
-    site.login(username, password)
-    site.requests["timeout"] = 125
-    site.chunk_size = 1024 * 1024 * 64
+    site = Site("commons")
+    site.login()
+    # site.login(username, password)
+    # site.requests["timeout"] = 125
+    # site.chunk_size = 1024 * 1024 * 64
 
-    logger.info(f"Signed in as {username}")
+    # logger.info(f"Signed in as {username}")
+    logger.info("Up")
 
     def getopt(item, default=None):
         return config.get(item, config.get(item, default))
@@ -227,7 +236,7 @@ def main():
                     for k, v in book["detail"].items()
                 ]
             )
-            category_page = site.pages[category_name]
+            category_page = Page(site, category_name)
             # TODO: for now we do not create a seperated category suffixed with the edition
             if not category_page.exists:
                 category_wikitext = (
@@ -239,8 +248,8 @@ def main():
     """
                     % title
                 )
-                category_page.edit(
-                    category_wikitext,
+                category_page.text = category_wikitext
+                category_page.save(
                     f"Creating (batch task; ynutcm; {batch_link})",
                 )
             volume_wikitext = f"""=={{{{int:filedesc}}}}==
@@ -262,26 +271,31 @@ def main():
             if not image_urls:
                 logger.warning(f"No images for {pagename}!")
                 continue
-            page = site.pages[pagename]
+            page = FilePage(site, pagename)
             try:
-                if not page.exists:
+                if not page.exists():
                     logger.info(f"Downloading images for {pagename}")
                     binary = fetch_volume(filename, image_urls)
-                    logger.info(f"Uploading {pagename} ({len(binary)} B)")
+                    logger.info(f"Uploading {pagename}")
 
                     @retry()
                     def do1():
                         r = site.upload(
-                            BytesIO(binary),
-                            filename=filename,
-                            description=volume_wikitext,
+                            source_filename=binary,
+                            filepage=page,
+                            text=volume_wikitext,
                             comment=comment,
+                            asynchronous=True,
+                            chunk_size=CHUNK_SIZE,
+                            ignore_warnings=["was-deleted"],
+                            # report_success=True,
                         )
-                        assert (
-                            r.get("result") or r.get("upload", {}).get("result")
-                        ) == "Success" or (r or {}).get("warnings", {}).get(
-                            "exists"
-                        ), f"Upload failed {r}"
+                        assert r, "Upload failed"
+                        # assert (
+                        #     r.get("result") or r.get("upload", {}).get("result")
+                        # ) == "Success" or (r or {}).get("warnings", {}).get(
+                        #     "exists"
+                        # ), f"Upload failed {r}"
 
                     do1()
                 else:
@@ -292,9 +306,8 @@ def main():
 
                         @retry()
                         def do2():
-                            r = page.edit(
-                                volume_wikitext, comment + " (Updating metadata)"
-                            )
+                            page.text = volume_wikitext
+                            r = page.save(comment + " (Updating metadata)")
                             assert (r or {}).get(
                                 "result", {}
                             ) == "Success", f"Update failed {r}"
