@@ -308,9 +308,10 @@ def main():
                         def do2():
                             page.text = volume_wikitext
                             r = page.save(comment + " (Updating metadata)")
-                            assert (r or {}).get(
-                                "result", {}
-                            ) == "Success", f"Update failed {r}"
+                            # assert (r or {}).get(
+                            #     "result", {}
+                            # ) == "Success", f"Update failed {r}"
+                            assert r, "Update failed"
 
                         do2()
             except Exception as e:
