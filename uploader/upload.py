@@ -223,7 +223,7 @@ def main():
             comment,
         ) in volsit:
             try:
-                next_filename = volsit.peek()[2]
+                next_filename = volsit.peek()[1]
             except StopIteration:
                 next_filename = None
             additional_fields = "\n".join(
@@ -311,7 +311,7 @@ def main():
                             # assert (r or {}).get(
                             #     "result", {}
                             # ) == "Success", f"Update failed {r}"
-                            assert r, "Update failed"
+                            assert r, f"Update failed {repr(r)}"
 
                         do2()
             except Exception as e:
