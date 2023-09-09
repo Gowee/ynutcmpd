@@ -154,7 +154,7 @@ def fetch_volume(filename, image_urls):
     #         assert blob
     #         return blob
     session = requests.Session()  # <del>activate connection reuse</del>
-    images_urls = [url for url in image_urls if url.endswith("jpg") or url.endswith("jpeg")]
+    image_urls = [url for url in image_urls if url.endswith("jpg") or url.endswith("jpeg")]
     images = []
     failures = 0
     for i, url in enumerate(image_urls):
