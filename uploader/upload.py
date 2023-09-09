@@ -31,6 +31,7 @@ import img2pdf
 
 CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), "config.yml")
 POSITION_FILE_PATH = os.path.join(os.path.dirname(__file__), ".position")
+FONT_FILE_PATH = Path(__file__).parent / "Aileron-Regular.otf"
 DATA_DIR = Path(__file__).parent / "../crawler/data"
 BLOB_DIR = Path(__file__).parent / "blobs"
 CACHE_FILE_PATH = Path(__file__).parent / ".cache.pdf"
