@@ -12,6 +12,10 @@ import sys
 from itertools import chain
 from pathlib import Path
 from tempfile import gettempdir
+from datetime import timezone
+import datetime
+import textwrap
+from urllib.parse import quote as urlquote
 
 
 from more_itertools import peekable
@@ -150,12 +154,14 @@ def fetch_volume(filename, image_urls):
     #         assert blob
     #         return blob
     session = requests.Session()  # <del>activate connection reuse</del>
+    images_urls = [url for url in image_urls if url.endswith("jpg") or url.endswith("jpeg")]
     images = []
+    failures = 0
     for i, url in enumerate(image_urls):
         if url.endswith(".db"):
             continue
         logger.debug(f"Downloading {url}")
-        assert url.endswith(".jpg"), "Expected JPG: " + url
+        # assert url.endswith(".jpg"), "Expected JPG: " + url
         try:
             image = fetch_file(url, session)
         except Exception as e:
@@ -163,6 +169,7 @@ def fetch_volume(filename, image_urls):
             image = construct_failure_page(url, page_name=f"({i+1}/{len(image_urls)})")
             failures += 1
         images.append(image)
+    assert failures < len(image_urls), "Failed to download all images"
     blob = img2pdf.convert(images)
     # with cached_path.open("wb") as f:
     #     f.write(blob)
