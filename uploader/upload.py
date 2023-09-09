@@ -85,7 +85,7 @@ def retry(times=RETRY_TIMES):
     return wrapper
 
 
-@retry(3)
+@retry(7)
 def fetch_file(url, session=None):
     resp = (session and session.get or requests.get)(
         url, headers={"User-Agent": USER_AGENT}
@@ -101,6 +101,41 @@ def fetch_file(url, session=None):
         ), f"Incomplete download: {actual_size}/{expected_size}"
     return resp.content
 
+def construct_failure_page(url, page_name=""):
+    qr = QRCode(box_size=3)
+    qr.add_data(url)
+    qr.make()
+    qr_img = qr.make_image()
+
+    # ref: https://stackoverflow.com/a/1970930/5488616
+    #      https://stackoverflow.com/a/68648910/5488616
+    #      ChatGPT
+    
+    font = ImageFont.truetype(str(FONT_FILE_PATH), size=20)
+
+    t = datetime.datetime.now(timezone.utc)
+    assert t.tzinfo == timezone.utc
+    if page_name:
+        page_name = " " + page_name
+    texts = [f"The page{page_name} links to an broken url:", *textwrap.wrap(urlquote(url, safe=":/"), break_on_hyphens=False), "Access time: " + str(t)]
+
+    margin = (5, 5)
+    spacing = 3 
+    mask_images = [font.getmask(text, "L") for text in texts]
+    width = max(max(mask_image.size[0] for mask_image in mask_images) ,  qr_img.size[0]) + margin[0] * 2
+    height = sum(mask_image.size[1] for mask_image in mask_images) + margin[1] * 2+ (len(mask_images) - 1) * spacing + spacing + qr_img.size[1]
+    # mask_image = font.getmask(text, "L")
+    img = Image.new("RGB", (width, height), (255,255,255))
+    y = margin[1]
+    for mask_image in mask_images:
+        # need to use the inner `img.im.paste` due to `getmask` returning a core
+        img.im.paste((0,0,0), (margin[0], y, margin[0] + mask_image.size[0], y+mask_image.size[1]), mask_image)
+        y += mask_image.size[1] + spacing
+    img.paste(qr_img, (0, y))
+
+    output = BytesIO()
+    img.save(output, format="JPEG")
+    return output.getvalue()
 
 @retry(3)
 def fetch_volume(filename, image_urls):
@@ -113,11 +148,18 @@ def fetch_volume(filename, image_urls):
     #         return blob
     session = requests.Session()  # <del>activate connection reuse</del>
     images = []
-    for url in image_urls:
+    for i, url in enumerate(image_urls):
         if url.endswith(".db"):
             continue
         logger.debug(f"Downloading {url}")
-        images.append(fetch_file(url, session))
+        assert url.endswith(".jpg"), "Expected JPG: " + url
+        try:
+            image = fetch_file(url, session)
+        except Exception as e:
+            logger.warning(f"Failed to download {url}, using placeholder image", exc_info=e)
+            image = construct_failure_page(url, page_name=f"({i+1}/{len(image_urls)})")
+            failures += 1
+        images.append(image)
     blob = img2pdf.convert(images)
     # with cached_path.open("wb") as f:
     #     f.write(blob)
