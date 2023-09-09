@@ -18,6 +18,8 @@ from more_itertools import peekable
 import requests
 import yaml
 import mwclient
+from PIL import Image, ImageFont, ImageDraw
+from qrcode import QRCode
 from pywikibot import Site, Page, FilePage
 from zhconv_rs import zhconv as zhconv_
 

@@ -13,6 +13,8 @@ pyyaml = "^6.0"
 zhconv-rs = "^0.1.0"
 img2pdf = "^0.4.4"
 pywikibot = "^8.3.0"
+pillow = "^10.0.0"
+qrcode = "^7.4.2"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
